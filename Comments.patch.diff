@@ -1,0 +1,72 @@
+diff --git a/includes/api/CommentListAPI.php b/includes/api/CommentListAPI.php
+index d62c5e3..398d1ea 100644
+--- a/includes/api/CommentListAPI.php
++++ b/includes/api/CommentListAPI.php
+@@ -7,6 +7,25 @@ class CommentListAPI extends ApiBase {
+ 		$commentsPage->orderBy = $this->getMain()->getVal( 'order' );
+ 		$commentsPage->currentPagerPage = $this->getMain()->getVal( 'pagerPage' );
+ 
++
++		if ( $this->getMain()->getVal( 'showFormat' ) ) {
++			$output = [];
++			$cmts = $commentsPage->getComments();
++			foreach($cmts as $commentId => $comments) {
++				foreach($comments as $comment) {
++					$output[] = [
++						'parent' => $comment->parentID,
++						'user' => $comment->username,
++						'text' => $comment->getText(),
++						'score' => $comment->currentScore
++					];
++				}
++			}
++			$result = $this->getResult();
++			$result->addValue( $this->getModuleName(), 'result', $output );
++			return true;
++		}
++
+ 		$output = '';
+ 		if ( $this->getMain()->getVal( 'showForm' ) ) {
+ 			$output .= $commentsPage->displayOrderForm();
+@@ -38,7 +57,11 @@ class CommentListAPI extends ApiBase {
+ 			'showForm' => [
+ 				ApiBase::PARAM_REQUIRED => false,
+ 				ApiBase::PARAM_TYPE => 'integer'
+-			]
++			],
++			'showFormat' => [
++				ApiBase::PARAM_REQUIRED => false,
++				ApiBase::PARAM_TYPE => 'integer'
++			],
+ 		];
+ 	}
+ }
+diff --git a/includes/parser/DisplayComments.php b/includes/parser/DisplayComments.php
+index 630bd83..c7d9aff 100644
+--- a/includes/parser/DisplayComments.php
++++ b/includes/parser/DisplayComments.php
+@@ -15,7 +15,7 @@ class DisplayComments {
+ 		global $wgCommentsSortDescending;
+ 
+ 		$po = $parser->getOutput();
+-		$po->updateCacheExpiry( 0 );
++		//! $po->updateCacheExpiry( 0 );
+ 		// If an unclosed <comments> tag is added to a page, the extension will
+ 		// go to an infinite loop...this protects against that condition.
+ 		$parser->setHook( 'comments', [ __CLASS__, 'nonDisplayComments' ] );
+diff --git a/resources/js/Comment.js b/resources/js/Comment.js
+index fa447bd..3680ab3 100644
+--- a/resources/js/Comment.js
++++ b/resources/js/Comment.js
+@@ -178,6 +178,11 @@
+ 							end = 0;
+ 						}
+ 						Comment.viewComments( document.commentForm.pageId.value, 0, end, document.commentForm.cpage.value );
++
++						mw.hook( 'Comments.submit' ).fire( {
++							pageID: pageID
++						} );
++
+ 					} else {
+ 						window.alert( response.error.info );
+ 						Comment.submitted = 0;

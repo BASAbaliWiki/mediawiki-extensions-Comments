@@ -7,6 +7,25 @@ class CommentListAPI extends ApiBase {
 		$commentsPage->orderBy = $this->getMain()->getVal( 'order' );
 		$commentsPage->currentPagerPage = $this->getMain()->getVal( 'pagerPage' );
 
+
+		if ( $this->getMain()->getVal( 'showFormat' ) ) {
+			$output = [];
+			$cmts = $commentsPage->getComments();
+			foreach($cmts as $commentId => $comments) {
+				foreach($comments as $comment) {
+					$output[] = [
+						'parent' => $comment->parentID,
+						'user' => $comment->username,
+						'text' => $comment->getText(),
+						'score' => $comment->currentScore
+					];
+				}
+			}
+			$result = $this->getResult();
+			$result->addValue( $this->getModuleName(), 'result', $output );
+			return true;
+		}
+
 		$output = '';
 		if ( $this->getMain()->getVal( 'showForm' ) ) {
 			$output .= $commentsPage->displayOrderForm();
@@ -38,7 +57,11 @@ class CommentListAPI extends ApiBase {
 			'showForm' => [
 				ApiBase::PARAM_REQUIRED => false,
 				ApiBase::PARAM_TYPE => 'integer'
-			]
+			],
+			'showFormat' => [
+				ApiBase::PARAM_REQUIRED => false,
+				ApiBase::PARAM_TYPE => 'integer'
+			],
 		];
 	}
 }

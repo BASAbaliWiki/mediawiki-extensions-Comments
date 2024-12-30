@@ -178,6 +178,11 @@
 							end = 0;
 						}
 						Comment.viewComments( document.commentForm.pageId.value, 0, end, document.commentForm.cpage.value );
+
+						mw.hook( 'Comments.submit' ).fire( {
+							pageID: pageID
+						} );
+
 					} else {
 						window.alert( response.error.info );
 						Comment.submitted = 0;
