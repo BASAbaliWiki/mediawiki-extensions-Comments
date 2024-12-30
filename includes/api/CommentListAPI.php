@@ -14,6 +14,7 @@ class CommentListAPI extends ApiBase {
 			foreach($cmts as $commentId => $comments) {
 				foreach($comments as $comment) {
 					$output[] = [
+						'comment_id' => $commentId,
 						'parent' => $comment->parentID,
 						'user' => $comment->username,
 						'text' => $comment->getText(),
