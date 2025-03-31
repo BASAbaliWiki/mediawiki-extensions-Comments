@@ -13,12 +13,17 @@ class CommentListAPI extends ApiBase {
 			$cmts = $commentsPage->getComments();
 			foreach($cmts as $commentId => $comments) {
 				foreach($comments as $comment) {
+
+					[ $isOfficial, $isOfficialPage ] = Comment::getOfficialInfo( $comment->username );
+
 					$output[] = [
 						'comment_id' => $commentId,
 						'parent' => $comment->parentID,
 						'user' => $comment->username,
 						'text' => $comment->getText(),
-						'score' => $comment->currentScore
+						'score' => $comment->currentScore,
+						'is_official' => $isOfficial,
+						'is_official_page' => $isOfficialPage,
 					];
 				}
 			}

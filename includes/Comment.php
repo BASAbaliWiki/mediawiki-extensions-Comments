@@ -920,10 +920,17 @@ class Comment extends ContextSource {
 			$avatarImg = $avatar->getAvatarURL() . "\n";
 		}
 
+		// isOfficial?
+		[ $isOfficial, $isOfficialPage ] = self::getOfficialInfo( $this->user->getName() );
+
 		$output = "<div id='comment-{$this->id}' class='c-item {$containerClass}'{$style}>" . "\n";
 		$output .= "<div class=\"c-avatar\">{$avatarImg}</div>" . "\n";
 		$output .= '<div class="c-container">' . "\n";
-		$output .= '<div class="c-user">' . "\n";
+		if ( $isOfficial ) {
+			$output .= '<div class="c-user c-user-official" data-user-official="' . $isOfficialPage . '">' . "\n";
+		} else {
+			$output .= '<div class="c-user">' . "\n";
+		}
 		$output .= "{$commentPoster}";
 		$output .= "<span class=\"c-user-level\">{$commentPosterLevel}</span> {$blockLink}" . "\n";
 
@@ -993,4 +1000,26 @@ class Comment extends ContextSource {
 
 		return $output;
 	}
+
+	public static function getOfficialInfo( $username ) {
+		// isOfficial?
+		$isOfficial = false;
+		$isOfficialPage = '';
+		$msgOfficialsLink = wfMessage('OfficialsUsersLink' );
+		if ( $msgOfficialsLink->exists() ) {
+			$officialsLink = $msgOfficialsLink->inContentLanguage()->parse();
+			$lines = explode( "\n", $officialsLink );
+			foreach ( $lines as $line ) {
+				$line = trim( $line );
+				[ $lineUser, $lineOfficialPage, $lineOfficialName ] = explode( '|', $line );
+				if ( $username === $lineUser ) {
+					$isOfficial = htmlspecialchars($lineOfficialName);
+					$isOfficialPage = htmlspecialchars($lineOfficialPage);
+					break;
+				}
+			}
+		}
+		return [ $isOfficial, $isOfficialPage ];
+	}
+
 }
