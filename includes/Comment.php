@@ -923,7 +923,11 @@ class Comment extends ContextSource {
 		// isOfficial?
 		[ $isOfficial, $isOfficialPage ] = self::getOfficialInfo( $this->user->getName() );
 
-		$output = "<div id='comment-{$this->id}' class='c-item {$containerClass}'{$style}>" . "\n";
+		if ( $isOfficial ) {
+			$output = "<div id='comment-{$this->id}' class='c-item c-item-official {$containerClass}'{$style}>" . "\n";
+		} else {
+			$output = "<div id='comment-{$this->id}' class='c-item {$containerClass}'{$style}>" . "\n";
+		}
 		$output .= "<div class=\"c-avatar\">{$avatarImg}</div>" . "\n";
 		$output .= '<div class="c-container">' . "\n";
 		if ( $isOfficial ) {
