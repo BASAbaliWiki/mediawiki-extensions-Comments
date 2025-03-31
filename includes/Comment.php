@@ -932,6 +932,8 @@ class Comment extends ContextSource {
 		$output .= '<div class="c-container">' . "\n";
 		if ( $isOfficial ) {
 			$output .= '<div class="c-user c-user-official" data-user-official="' . $isOfficialPage . '">' . "\n";
+			$commentPoster = '<a href="' . htmlspecialchars( Title::newFromText( $isOfficialPage )->getFullURL(), ENT_QUOTES ) .
+				'" rel="nofollow">' . htmlspecialchars( $isOfficial, ENT_QUOTES ) . '</a>';
 		} else {
 			$output .= '<div class="c-user">' . "\n";
 		}
