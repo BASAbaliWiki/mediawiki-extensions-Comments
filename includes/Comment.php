@@ -937,7 +937,15 @@ class Comment extends ContextSource {
 		} else {
 			$output .= '<div class="c-user">' . "\n";
 		}
-		$output .= "{$commentPoster}";
+
+		if ( !$isOfficial && $this->page->title->getNamespace() === NS_OFFICIAL_TOPIC ) {
+			// Do not display the commenter on the official's comments
+			$output .= "Commenter";
+		} else {
+			$output .= "{$commentPoster}";
+		}
+
+
 		$output .= "<span class=\"c-user-level\">{$commentPosterLevel}</span> {$blockLink}" . "\n";
 
 		Wikimedia\suppressWarnings(); // E_STRICT bitches about strtotime()

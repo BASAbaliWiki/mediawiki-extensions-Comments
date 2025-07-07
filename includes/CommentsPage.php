@@ -564,6 +564,8 @@ class CommentsPage extends ContextSource {
 			);
 		}
 
+		//$this->getOutput()->enableClientCache(false);
+
 		// 'comment' user right is required to add new comments
 		if ( !$this->getUser()->isAllowed( 'comment' ) ) {
 			$output .= wfMessage( 'comments-not-allowed' )->parse();
