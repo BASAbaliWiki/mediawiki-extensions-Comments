@@ -208,3 +208,13 @@ li.c-pager-item {
 .cod img {
 	margin-bottom: 8px;
 }
+
+/* BBW styles */
+.comments-body form[name="commentForm"] {
+	margin: 20px 0 0 0;
+}
+
+#allcomments ul.c-pager {
+	padding: 0;
+	margin: 10px 0;
+}

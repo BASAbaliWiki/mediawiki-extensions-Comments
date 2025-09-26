@@ -104,7 +104,9 @@
 		 * @param {number} cpage Comment page number (used for pagination)
 		 */
 		viewComments: function ( pageID, order, end, cpage ) {
-			document.commentForm.cpage.value = cpage;
+			if (typeof document.commentForm.cpage !== 'undefined') {
+				document.commentForm.cpage.value = cpage;
+			}
 			document.getElementById( 'allcomments' ).innerHTML = mw.msg( 'comments-loading' ) + '<br /><br />';
 
 			$.ajax( {
