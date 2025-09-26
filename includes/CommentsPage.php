@@ -165,6 +165,10 @@ class CommentsPage extends ContextSource {
 	public function getComments() {
 		$dbr = wfGetDB( DB_REPLICA );
 
+		$cache = \MediaWiki\MediaWikiServices::getInstance()->getMainWANObjectCache();
+		$key = $cache->makeKey( 'comments-wikipage', $this->id );
+		$cachedData = $cache->get( $key );
+
 		// Defaults (for non-social wikis)
 		$tables = [
 			'Comments',
@@ -210,40 +214,51 @@ class CommentsPage extends ContextSource {
 			$params['GROUP BY'] .= ', stats_total_points';
 		}
 
-		// Perform the query
-		$res = $dbr->select(
-			$tables,
-			$fields,
-			[ 'Comment_Page_ID' => $this->id ],
-			__METHOD__,
-			$params,
-			$joinConds
-		);
-
 		$comments = [];
+		$commentsRetrievedData = [];
 
-		foreach ( $res as $row ) {
-			if ( $row->Comment_Parent_ID == 0 ) {
-				$thread = $row->CommentID;
-			} else {
-				$thread = $row->Comment_Parent_ID;
+		if ( !$cachedData ) {
+			// Perform the query
+			$res = $dbr->select(
+				$tables,
+				$fields,
+				[ 'Comment_Page_ID' => $this->id ],
+				__METHOD__,
+				$params,
+				$joinConds
+			);
+
+			foreach ( $res as $row ) {
+				if ( $row->Comment_Parent_ID == 0 ) {
+					$thread = $row->CommentID;
+				} else {
+					$thread = $row->Comment_Parent_ID;
+				}
+				$data = [
+					'Comment_actor' => $row->Comment_actor,
+					'Comment_IP' => $row->Comment_IP,
+					'Comment_Text' => $row->Comment_Text,
+					'Comment_Date' => $row->Comment_Date,
+					'Comment_actor' => $row->Comment_actor,
+					'Comment_user_points' => ( isset( $row->stats_total_points ) ? number_format( $row->stats_total_points ) : 0 ),
+					'CommentID' => $row->CommentID,
+					'Comment_Parent_ID' => $row->Comment_Parent_ID,
+					'thread' => $thread,
+					'timestamp' => wfTimestamp( TS_UNIX, $row->timestamp ),
+					'current_vote' => ( isset( $row->current_vote ) ? $row->current_vote : false ),
+					'total_vote' => ( isset( $row->comment_score ) ? $row->comment_score : 0 ),
+				];
+				$commentsRetrievedData[] = $data;
 			}
-			$data = [
-				'Comment_actor' => $row->Comment_actor,
-				'Comment_IP' => $row->Comment_IP,
-				'Comment_Text' => $row->Comment_Text,
-				'Comment_Date' => $row->Comment_Date,
-				'Comment_actor' => $row->Comment_actor,
-				'Comment_user_points' => ( isset( $row->stats_total_points ) ? number_format( $row->stats_total_points ) : 0 ),
-				'CommentID' => $row->CommentID,
-				'Comment_Parent_ID' => $row->Comment_Parent_ID,
-				'thread' => $thread,
-				'timestamp' => wfTimestamp( TS_UNIX, $row->timestamp ),
-				'current_vote' => ( isset( $row->current_vote ) ? $row->current_vote : false ),
-				'total_vote' => ( isset( $row->comment_score ) ? $row->comment_score : 0 ),
-			];
+			if ( $commentsRetrievedData ) {
+				$cache->set( $key, json_encode( $commentsRetrievedData ) );
+			}
+		} else {
+			$commentsRetrievedData = json_decode( $cachedData, true );
+		}
 
-			$comments[] = new Comment( $this, $this->getContext(), $data );
+		foreach ( $commentsRetrievedData as $cd ) {
+			$comments[] = new Comment( $this, $this->getContext(), $cd );
 		}
 
 		$commentThreads = [];
@@ -613,6 +628,11 @@ class CommentsPage extends ContextSource {
 	 */
 	function clearCommentListCache() {
 		wfDebug( "Clearing comments for page {$this->id} from cache\n" );
+
+		// wipe cache for the given page when new comment has been posted
+		$cache = \MediaWiki\MediaWikiServices::getInstance()->getMainWANObjectCache();
+		$key = $cache->makeKey( 'comments-wikipage', $this->id );
+		$cache->delete( $key );
 
 		if ( is_object( $this->title ) ) {
 			$this->title->invalidateCache();
