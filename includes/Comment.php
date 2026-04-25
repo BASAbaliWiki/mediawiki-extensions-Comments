@@ -1029,7 +1029,14 @@ class Comment extends ContextSource {
 				$line = trim( $line );
 				[ $lineUser, $lineOfficialPage, $lineOfficialName ] = explode( '|', $line );
 				if ( $username === $lineUser ) {
-					$isOfficial = htmlspecialchars($lineOfficialName);
+					// extra html removals
+					$isOfficial = str_replace('<p>', '', $lineOfficialName);
+					$isOfficial = str_replace('</p>', '', $isOfficial);
+					$isOfficial = str_replace('<b>', '', $isOfficial);
+					$isOfficial = str_replace('</b>', '', $isOfficial);
+					$isOfficial = str_replace('<br>', '', $isOfficial);
+					// encode the rest just in case
+					$isOfficial = htmlspecialchars($isOfficial);
 					$isOfficialPage = htmlspecialchars($lineOfficialPage);
 					break;
 				}
